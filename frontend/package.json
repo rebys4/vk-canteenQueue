@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
+    "@vkontakte/icons": "^3.14.0",
     "@vkontakte/vk-bridge": "^2.15.7",
     "@vkontakte/vk-tunnel": "^0.2.7",
     "@vkontakte/vkui": "^7.5.3",

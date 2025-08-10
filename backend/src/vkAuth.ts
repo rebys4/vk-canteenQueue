@@ -31,10 +31,11 @@ declare global {
   }
 }
 
+// backend/src/vkAuth.ts
 export function vkAuthMiddleware(secret: string, allowDevFallback = false) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // Ожидаем заголовок X-VK-Params со строкой query (vk_…)
-    const raw = req.header('X-VK-Params');
+    // 1) Прод/тест с подписью
+    const raw = req.header('X-VK-Params') || req.header('X-VK-Launch-Params');
     if (raw) {
       const qs = new URLSearchParams(raw);
       const v = verifyLaunchParams(qs, secret);
@@ -45,13 +46,13 @@ export function vkAuthMiddleware(secret: string, allowDevFallback = false) {
       return next();
     }
 
-    // Локальная разработка без подписи
-    if (allowDevFallback) {
-      const devId = Number(req.header('X-DEV-User-Id') ?? 0);
-      if (devId) {
-        req.vk = { userId: devId };
-        return next();
-      }
+    // 2) Dev: принимаем X-DEV-User-Id если он есть
+    const devIdHeader = req.header('X-DEV-User-Id');
+    const devId = devIdHeader ? Number(devIdHeader) : 0;
+    const isProd = process.env.NODE_ENV === 'production';
+    if (devId && (allowDevFallback || !isProd)) {
+      req.vk = { userId: devId };
+      return next();
     }
 
     return res.status(401).json({ error: 'no vk launch params' });
