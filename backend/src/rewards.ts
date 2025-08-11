@@ -30,11 +30,11 @@ export async function maybeAwardBadge(vkId: number, code: string) {
   }
 }
 
-export function isAdmin(vkId: number | undefined) {
-  if (!vkId) return false;
-  const list = (process.env.VK_ADMINS ?? '')
-    .split(',')
-    .map(s => Number(s.trim()))
-    .filter(Boolean);
-  return list.includes(vkId);
+const ADMIN_IDS = (process.env.VK_ADMINS || '')
+  .split(',')
+  .map(s => Number(s.trim()))
+  .filter(Boolean);
+
+export function isAdmin(vkId: number): boolean {
+  return ADMIN_IDS.includes(vkId);
 }
