@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState, type JSX } from 'react';
+import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import {
   Panel, PanelHeader, Group, Button, SimpleCell, Placeholder, Select, Div,
-  Separator, Spacing, View, Tabs, TabsItem, Snackbar, Skeleton
+  Separator, Spacing, View, Tabs, TabsItem, Skeleton
 } from '@vkontakte/vkui';
 import bridge from '@vkontakte/vk-bridge';
 import { supabase } from './lib/supabase';
@@ -19,7 +19,6 @@ type QueueRow = {
   position: number;
 };
 type DisplayNameMap = Record<number, string>;
-type SnackData = { message: string } | null;
 
 const PRESET_CANTEEN = import.meta.env.VITE_CANTEEN_ID || '';
 
@@ -42,7 +41,6 @@ export default function App(): JSX.Element {
   const [names, setNames] = useState<DisplayNameMap>({});
   const [etaSec, setEtaSec] = useState(0);
 
-  const [snackbar, setSnackbar] = useState<SnackData>(null);
 
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingLeave, setLoadingLeave] = useState(false);
@@ -142,7 +140,6 @@ export default function App(): JSX.Element {
             if (payload?.eventType === 'UPDATE' && payload?.new) {
               const n = payload.new as QueueRow;
               if (n.status === 'served' && n.user_id === vkIdRef.current) {
-                showSnackbar('Вас позвали! Подходите к окну.');
                 bridge.send('VKWebAppTapticNotificationOccurred', { type: 'success' }).catch(() => { });
               }
             }
@@ -201,18 +198,6 @@ export default function App(): JSX.Element {
     })();
   }, [canteenId, position]);
 
-  // --- Snack helper ---
-  const showSnackbar = (message: string) => {
-    if (snackbar) return;
-    setSnackbar(
-      <Snackbar
-        onClose={() => setSnackbar(null)}
-      >
-        {message}
-      </Snackbar>,
-    );
-  };
-
   // --- Actions ---
   const join = async () => {
     if (!canteenId) return;
@@ -223,12 +208,8 @@ export default function App(): JSX.Element {
         body: JSON.stringify({ canteenId, firstName, lastName }),
       });
       await loadQueue(canteenId);
-      showSnackbar('Вы встали в очередь');
-    } catch (e: any) {
-      if (e?.code === 'already_waiting') showSnackbar('Вы уже в очереди');
-      else if (e?.code === 'canteen_closed' || e?.status === 423) showSnackbar('Окно выдачи на паузе');
-      else showSnackbar('Не удалось встать в очередь');
-    } finally {
+    } catch (e: any) {} 
+    finally {
       setLoadingJoin(false);
     }
   };
@@ -242,10 +223,7 @@ export default function App(): JSX.Element {
         body: JSON.stringify({ rowId: myRow.id }),
       });
       await loadQueue(canteenId);
-      showSnackbar('Вы вышли из очереди');
-    } catch {
-      showSnackbar('Не удалось выйти');
-    } finally {
+    } catch {} finally {
       setLoadingLeave(false);
     }
   };
@@ -259,11 +237,7 @@ export default function App(): JSX.Element {
         body: JSON.stringify({ canteenId }),
       });
       await loadQueue(canteenId);
-      showSnackbar('Следующий вызван');
-    } catch (e: any) {
-      if (e?.code === 'queue_empty') showSnackbar('Очередь пуста');
-      else showSnackbar('Не удалось вызвать следующего');
-    } finally {
+    } catch (e: any) {} finally {
       setLoadingNext(false);
     }
   };
@@ -278,10 +252,7 @@ export default function App(): JSX.Element {
       });
       const { data } = await supabase.from('canteens').select('*').order('title');
       if (data) setCanteens(data);
-      showSnackbar(nextOpen ? 'Окно открыто' : 'Окно на паузе');
-    } catch {
-      showSnackbar('Не удалось сменить статус окна');
-    }
+    } catch {}
   };
 
   return (
@@ -334,7 +305,6 @@ export default function App(): JSX.Element {
             : <Button size="l" stretched disabled={!canteenId || !isOpen || loadingJoin} loading={loadingJoin} onClick={join}>
               {isOpen ? 'Встать в очередь' : 'Окно на паузе'}
             </Button>}
-          {snackbar}
         </Group>
         <Group>
           <Button size="l" stretched mode="secondary" onClick={() => shareStory(etaSec / 60)}>Поделиться в Stories</Button>
@@ -349,7 +319,6 @@ export default function App(): JSX.Element {
               <Button size="l" stretched mode={isOpen ? 'secondary' : 'primary'} onClick={toggleOpen}>
                 {isOpen ? 'Поставить на паузу' : 'Открыть окно'}
               </Button>
-              {snackbar}
             </Group>
           </>
         )}

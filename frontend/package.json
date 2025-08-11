@@ -8,12 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tunnel": "vk-tunnel --insecure=1 --http-protocol=http --ws-protocol=ws --host=0.0.0.0 --port=5173"
+    "tunnel": "vk-tunnel --insecure=1 --http-protocol=http --ws-protocol=ws --host=0.0.0.0 --port=5173",
+    "deploy": "vk-miniapps-deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
     "@vkontakte/icons": "^3.14.0",
     "@vkontakte/vk-bridge": "^2.15.7",
+    "@vkontakte/vk-miniapps-deploy": "^1.0.0",
     "@vkontakte/vk-tunnel": "^0.2.7",
     "@vkontakte/vkui": "^7.5.3",
     "react": "^19.1.1",
